@@ -3,19 +3,19 @@
 import { useState } from "react";
 import { AddressInput } from "@scaffold-ui/components";
 import { IntegerInput } from "@scaffold-ui/debug-contracts";
-// import { useWatchBalance } from "@scaffold-ui/hooks";
+import { useWatchBalance } from "@scaffold-ui/hooks";
 import type { NextPage } from "next";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
-import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { useDeployedContractInfo, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { multiplyTo1e18 } from "~~/utils/scaffold-eth/priceInWei";
 
 const TokenVendor: NextPage = () => {
   const [toAddress, setToAddress] = useState("");
   const [tokensToSend, setTokensToSend] = useState("");
-  // const [tokensToBuy, setTokensToBuy] = useState<string | bigint>("");
-  // const [isApproved, setIsApproved] = useState(false);
-  // const [tokensToSell, setTokensToSell] = useState<string>("");
+  const [tokensToBuy, setTokensToBuy] = useState<string | bigint>("");
+  const [isApproved, setIsApproved] = useState(false);
+  const [tokensToSell, setTokensToSell] = useState<string>("");
 
   const { address } = useAccount();
   const { data: yourTokenSymbol } = useScaffoldReadContract({
@@ -29,22 +29,22 @@ const TokenVendor: NextPage = () => {
     args: [address],
   });
 
-  // const { data: vendorContractData } = useDeployedContractInfo({ contractName: "YourToken" });
-  // const { writeContractAsync: writeVendorAsync } = useScaffoldWriteContract({ contractName: "YourToken" });
+  const { data: vendorContractData } = useDeployedContractInfo({ contractName: "YourToken" });
+  const { writeContractAsync: writeVendorAsync } = useScaffoldWriteContract({ contractName: "YourToken" });
   const { writeContractAsync: writeYourTokenAsync } = useScaffoldWriteContract({ contractName: "YourToken" });
 
-  // const { data: vendorTokenBalance } = useScaffoldReadContract({
-  //   contractName: "YourToken",
-  //   functionName: "balanceOf",
-  //   args: [vendorContractData?.address],
-  // });
+  const { data: vendorTokenBalance } = useScaffoldReadContract({
+    contractName: "YourToken",
+    functionName: "balanceOf",
+    args: [vendorContractData?.address],
+  });
 
-  // const { data: vendorEthBalance } = useWatchBalance({ address: vendorContractData?.address });
+  const { data: vendorEthBalance } = useWatchBalance({ address: vendorContractData?.address });
 
-  // const { data: tokensPerEth } = useScaffoldReadContract({
-  //   contractName: "Vendor",
-  //   functionName: "tokensPerEth",
-  // });
+  const { data: tokensPerEth } = useScaffoldReadContract({
+    contractName: "Vendor",
+    functionName: "tokensPerEth",
+  });
 
   return (
     <>
@@ -58,7 +58,7 @@ const TokenVendor: NextPage = () => {
             </div>
           </div>
           {/* Vendor Balances */}
-          {/* <hr className="w-full border-secondary my-3" />
+          <hr className="w-full border-secondary my-3" />
           <div>
             Vendor token balance:{" "}
             <div className="inline-flex items-center justify-center">
@@ -69,11 +69,11 @@ const TokenVendor: NextPage = () => {
           <div>
             Vendor eth balance: {Number(formatEther(vendorEthBalance?.value || 0n)).toFixed(4)}
             <span className="font-bold ml-1">ETH</span>
-          </div> */}
+          </div>
         </div>
 
         {/* Buy Tokens */}
-        {/* <div className="flex flex-col items-center space-y-4 bg-base-100 shadow-lg shadow-secondary border-8 border-secondary rounded-xl p-6 mt-8 w-full max-w-lg">
+        <div className="flex flex-col items-center space-y-4 bg-base-100 shadow-lg shadow-secondary border-8 border-secondary rounded-xl p-6 mt-8 w-full max-w-lg">
           <div className="text-xl">Buy tokens</div>
           <div>{tokensPerEth?.toString() || 0} tokens per ETH</div>
 
@@ -98,7 +98,7 @@ const TokenVendor: NextPage = () => {
           >
             Buy Tokens
           </button>
-        </div> */}
+        </div>
 
         {!!yourTokenBalance && (
           <div className="flex flex-col items-center space-y-4 bg-base-100 shadow-lg shadow-secondary border-8 border-secondary rounded-xl p-6 mt-8 w-full max-w-lg">

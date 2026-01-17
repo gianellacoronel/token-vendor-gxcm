@@ -9,19 +9,20 @@ contract Vendor is Ownable {
     /// Errors //////
     /////////////////
 
-    // Errors go here...
+    error InvalidEthAmount();
+    error InsufficientVendorTokenBalance(uint256 available, uint256 required);
 
     //////////////////////
     /// State Variables //
     //////////////////////
-
+    uint256 public constant tokensPerEth = 100;
     YourToken public immutable yourToken;
 
     ////////////////
     /// Events /////
     ////////////////
 
-    // Events go here...
+    event BuyTokens(address indexed buyer, uint256 amountOfETH, uint256 amountOfTokens);
 
     ///////////////////
     /// Constructor ///
@@ -35,7 +36,18 @@ contract Vendor is Ownable {
     /// Functions /////
     ///////////////////
 
-    function buyTokens() external payable {}
+    function buyTokens() external payable {
+        if (msg.value == 0) {
+            revert InvalidEthAmount();
+        }
+        uint256 tokensReceived = msg.value * tokensPerEth;
+        if (yourToken.balanceOf(address(this)) < tokensReceived) {
+            revert InsufficientVendorTokenBalance(yourToken.balanceOf(address(this)), tokensReceived);
+        }
+
+        yourToken.transfer(msg.sender, tokensReceived);
+        emit BuyTokens(msg.sender, msg.value, tokensReceived);
+    }
 
     function withdraw() public onlyOwner {}
 
