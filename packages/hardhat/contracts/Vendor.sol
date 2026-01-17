@@ -11,6 +11,7 @@ contract Vendor is Ownable {
 
     error InvalidEthAmount();
     error InsufficientVendorTokenBalance(uint256 available, uint256 required);
+    error EthTransferFailed(address to, uint256 amount);
 
     //////////////////////
     /// State Variables //
@@ -49,7 +50,13 @@ contract Vendor is Ownable {
         emit BuyTokens(msg.sender, msg.value, tokensReceived);
     }
 
-    function withdraw() public onlyOwner {}
+    function withdraw() public onlyOwner {
+        uint256 amount = address(this).balance;
+        (bool success, ) = owner().call{ value: amount }("");
+        if (success == false) {
+            revert EthTransferFailed(msg.sender, amount);
+        }
+    }
 
     function sellTokens(uint256 amount) public {}
 }
