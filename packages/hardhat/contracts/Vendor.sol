@@ -13,6 +13,9 @@ contract Vendor is Ownable {
     error InsufficientVendorTokenBalance(uint256 available, uint256 required);
     error EthTransferFailed(address to, uint256 amount);
 
+    error InvalidTokenAmount();
+    error InsufficientVendorEthBalance(uint256 available, uint256 required);
+
     //////////////////////
     /// State Variables //
     //////////////////////
@@ -24,6 +27,7 @@ contract Vendor is Ownable {
     ////////////////
 
     event BuyTokens(address indexed buyer, uint256 amountOfETH, uint256 amountOfTokens);
+    event SellTokens(address indexed seller, uint256 amountOfTokens, uint256 amountOfETH);
 
     ///////////////////
     /// Constructor ///
@@ -53,10 +57,27 @@ contract Vendor is Ownable {
     function withdraw() public onlyOwner {
         uint256 amount = address(this).balance;
         (bool success, ) = owner().call{ value: amount }("");
-        if (success == false) {
+        if (!success) {
             revert EthTransferFailed(msg.sender, amount);
         }
     }
 
-    function sellTokens(uint256 amount) public {}
+    function sellTokens(uint256 amount) public {
+        if (amount == 0) {
+            revert InvalidTokenAmount();
+        }
+        uint256 vendorEthAmount = address(this).balance;
+        uint256 tokensEthAmount = amount / tokensPerEth;
+        if (vendorEthAmount < tokensEthAmount) {
+            revert InsufficientVendorEthBalance(vendorEthAmount, tokensEthAmount);
+        }
+
+        yourToken.transferFrom(msg.sender, address(this), amount);
+        (bool success, ) = msg.sender.call{ value: tokensEthAmount }("");
+        if (!success) {
+            revert EthTransferFailed(msg.sender, tokensEthAmount);
+        }
+
+        emit SellTokens(msg.sender, amount, tokensEthAmount);
+    }
 }
